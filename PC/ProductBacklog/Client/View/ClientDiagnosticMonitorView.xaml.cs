@@ -19,18 +19,18 @@ namespace ProductBacklog.Client.View
             var vm = this.DataContext as ClientDiagnosticMonitor;
             if (vm != null)
             {
-                vm.Movements(offset =>
-                    {
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            if (Canvas.GetLeft(this.canvas)  + offset < 0)
-                                Canvas.SetLeft(this.canvas, 0);
-                            else if (Canvas.GetLeft(this.canvas) + offset > Canvas.GetRight(parent))
-                                Canvas.SetLeft(this.canvas, Canvas.GetRight(parent)-20);
-                            else
-                                Canvas.SetLeft(this.canvas, Canvas.GetLeft(this.canvas) + offset);
-                        });
-                    });
+                //vm.Movements(offset =>
+                //    {
+                //        this.Dispatcher.Invoke(() =>
+                //        {
+                //            if (Canvas.GetLeft(this.canvas)  + offset < 0)
+                //                Canvas.SetLeft(this.canvas, 0);
+                //            else if (Canvas.GetLeft(this.canvas) + offset > Canvas.GetRight(parent))
+                //                Canvas.SetLeft(this.canvas, Canvas.GetRight(parent)-20);
+                //            else
+                //                Canvas.SetLeft(this.canvas, Canvas.GetLeft(this.canvas) + offset);
+                //        });
+                //    });
             }
         }
     }

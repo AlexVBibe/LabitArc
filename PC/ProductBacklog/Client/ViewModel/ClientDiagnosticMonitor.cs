@@ -22,10 +22,11 @@ namespace ProductBacklog.Client.ViewModel
         private double velocity;
         private double acceleration;
         private double distance;
-        private double sampleDistance;
-        private double minimum;
-        private double maximum;
-        private double average;
+        private float minimum;
+        private float maximum;
+        private float average;
+        private bool canStart = false;
+        private readonly List<float> statisticSamples = new List<float>();
 
         [Dependency]
         public IClientStateController ClientStateController { get; set; }
@@ -33,18 +34,14 @@ namespace ProductBacklog.Client.ViewModel
         [Dependency]
         public IClientService ClientService { get; set; }
 
-        [Dependency]
-        public IVelocityCalculationService VelocityCalculationService { get; set; }
-
-        [Dependency]
-        public IDistanceCalculationService DistanceCalculationService { get; set; }
-
         public ObservableCollection<SensorInfo> AvailableSensors {get; set; }
+        public ObservableCollection<KeyValuePair<int, float>> Samples { get; set; }
 
         public ICommand StartClient { get; set; }
         public ICommand ShutdownClient { get; set; }
         public ICommand SendMessage { get; set; }
         public ICommand ActivateSensorCommand { get; set; }
+        public ICommand ClearSamples { get; set; }
 
         public bool IsServerOnline
         {
@@ -78,25 +75,19 @@ namespace ProductBacklog.Client.ViewModel
             set => SetField(ref distance, value, nameof(Distance));
         }
 
-        public double SampleDistance
-        {
-            get => sampleDistance;
-            set => SetField(ref sampleDistance, value, nameof(SampleDistance));
-        }
-
-        public double Minimum
+        public float Minimum
         {
             get => minimum;
             set => SetField(ref minimum, value, nameof(Minimum));
         }
 
-        public double Maximum
+        public float Maximum
         {
             get => maximum;
             set => SetField(ref maximum, value, nameof(Maximum));
         }
 
-        public double Average
+        public float Average
         {
             get => average;
             set => SetField(ref average, value, nameof(Average));
@@ -108,7 +99,9 @@ namespace ProductBacklog.Client.ViewModel
             SendMessage = new DelegateCommand<object>(ExecuteSendMessage);
             ShutdownClient = new DelegateCommand<object>(ExecuteShutdownClient);
             ActivateSensorCommand = new DelegateCommand<object>(ExecuteActivateSensor);
+            ClearSamples = new DelegateCommand<object>(ExecuteClearSamples);
             AvailableSensors = new ObservableCollection<SensorInfo>();
+            Samples = new ObservableCollection<KeyValuePair<int, float>>();
         }
 
         private void ExecuteStartClient(object args)
@@ -134,6 +127,13 @@ namespace ProductBacklog.Client.ViewModel
             }
         }
 
+        public void ExecuteClearSamples(object args)
+        {
+            Samples.Clear();
+            canStart = false;
+            statisticSamples.Clear();
+        }
+
         public void OnLoaded()
         {
             ClientStateController.Attach(this);
@@ -143,19 +143,6 @@ namespace ProductBacklog.Client.ViewModel
         public void OnUnloaded()
         {
         }
-
-        public Action<double> move;
-
-        public void Movements(Action<double> move)
-        {
-            this.move = move;
-        }
-
-        private int counter = 0;
-        private bool canStart;
-        private bool statisticInProgress;
-        private List<double> samples = new List<double>();
-        private bool? isLeftMovement;
 
         private void OnClientServiceMessageHandler(string message)
         {
@@ -170,85 +157,38 @@ namespace ProductBacklog.Client.ViewModel
                     foreach (var line in lines)
                     {
                         var data = line.Split(new[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
-                        var x = double.Parse(data[1]);
-                        var y = double.Parse(data[2]);
-                        var z = double.Parse(data[3]);
-                        var t = long.Parse(data[4]);
+                        var x = float.Parse(data[1]);
+                        var y = float.Parse(data[2]);
+                        var z = float.Parse(data[3]);
+                        var t = (int)(long.Parse(data[4]));// / 1000000000);
 
-                        if (!canStart || samples.Count <= 100)
+                        if (!canStart || statisticSamples.Count <= 10)
                         {
-                            samples.Add(x);
-                            if (samples.Count != 100)
-                                return;
-                            GatherStatistic(x, y, z);
+                            statisticSamples.Add(x);
+                            if (statisticSamples.Count != 10)
+                                break;
+                            GatherStatistic();
                             canStart = true;
                         }
 
-                        x -= Average; // bring zero to middle of a noise
-                        var noiseSpectrum = (Math.Abs(Minimum) + Math.Abs(Maximum)) / 2.0;
+                        System.Diagnostics.Debug.WriteLine($"X = {x}");
 
-                        var absX = Math.Abs(x);
-                        if (noiseSpectrum > absX && absX < noiseSpectrum)
-                        {
-                            if (VelocityCalculationService.Velocity != 0)
-                            {
-                                counter++;
-                                // slow down till zero
-                                if (counter > 5)
-                                {
-                                    VelocityCalculationService.Reset();
-                                    isLeftMovement = null;
-                                }
-                                else
-                                {
-                                    if (VelocityCalculationService.Velocity > 0)
-                                        VelocityCalculationService.Refresh(-Math.Abs(x), t);
-                                    else if (VelocityCalculationService.Velocity < 0)
-                                    {
-                                        VelocityCalculationService.Refresh(Math.Abs(x), t);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            counter = 0;
+                        x += Average;
+                        Application.Current.Dispatcher.Invoke(() =>
+                            Samples.Add(new KeyValuePair<int, float>(t, x)));
 
-                            if (!isLeftMovement.HasValue)
-                            {
-                                isLeftMovement = x > 0;
-                            }
-
-                            if (isLeftMovement.Value && x > 0 )
-                                VelocityCalculationService.Refresh(x, t);
-                            else if (!isLeftMovement.Value && x < 0)
-                                VelocityCalculationService.Refresh(x, t);
-                            else
-                            {
-                                return;
-                            }
-                        }
-
-                        DistanceCalculationService.Refresh(VelocityCalculationService.Velocity, t);
-
-                        Velocity = VelocityCalculationService.Velocity;
-                        Acceleration = VelocityCalculationService.Acceleration;
-                        SampleDistance = DistanceCalculationService.SampleDistance;
-                        Distance = DistanceCalculationService.Distance;
-
-                        if (VelocityCalculationService.Velocity != 0)
-                            move(SampleDistance*5);
+                        System.Diagnostics.Debug.WriteLine($"X = {x} T = {data[4]} {t}");
                     }
                 }
             }
         }
 
-        private void GatherStatistic(double x, double y, double z)
+        private void GatherStatistic()
         {
-            samples.Sort();
-            Minimum = samples.First() - 0.05;
-            Maximum = samples.Last() + 0.05;
-            Average = samples.Sum() / (double)samples.Count;
+            statisticSamples.Sort();
+            Minimum = statisticSamples.First();
+            Maximum = statisticSamples.Last();
+            Average = statisticSamples.Average();
         }
 
         private void ParseModesAndCreateHandlers(string message)
