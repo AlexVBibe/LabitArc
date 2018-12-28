@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EE02663D-0FC8-4DF3-9AF0-CCD1591AF176}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabitArc", "ProductBacklog\LabitArc.csproj", "{4BC80620-E9D1-45FC-997E-A8F371D50C44}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4BC80620-E9D1-45FC-997E-A8F371D50C44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BC80620-E9D1-45FC-997E-A8F371D50C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BC80620-E9D1-45FC-997E-A8F371D50C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BC80620-E9D1-45FC-997E-A8F371D50C44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A7265D5-5757-4A39-BC11-3130AF1AE246}
+	EndGlobalSection
+EndGlobal

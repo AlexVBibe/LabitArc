@@ -1,0 +1,10 @@
+
+PC/packages/
+
+PC/\.vs/
+
+*.user
+
+PC/ProductBacklog/bin/
+
+PC/ProductBacklog/obj/

@@ -1,0 +1,33 @@
+﻿<UserControl 
+  x:Class="Labit.Composition.CompositeView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+  xmlns:local="clr-namespace:Labit.Composition">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary.MergedDictionaries>
+
+            <local:CompositionTemplateSelector x:Key="CompositionTemplateSelector"/>
+            <BooleanToVisibilityConverter x:Key="Vis2BoolConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <ContentPresenter
+            ContentTemplateSelector="{Binding Source={StaticResource CompositionTemplateSelector}}"
+            Content="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:CompositeView}}, Path=ViewModel}">
+        </ContentPresenter>
+        
+        <AdornerDecorator>
+            <local:WaitControl
+                Visibility="{Binding
+                    RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:CompositeView}},
+                    Path=DataContext.IsBusy,
+                    Converter={StaticResource Vis2BoolConverter}, FallbackValue=Collapsed}"/>
+        </AdornerDecorator>
+    </Grid>
+</UserControl>
